@@ -1,0 +1,14 @@
+django>=2
+django-extensions
+django-debug-toolbar
+django-environ
+djangorestframework
+markdown
+
+huey
+
+psycopg2
+
+redispy
+hiredis
+django-redis

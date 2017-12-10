@@ -18,6 +18,12 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 # Note: This key only used for development and testing.
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='CHANGEME!!!')
 
+# DATABASE
+DATABASES = {
+    'default': env.db('DATABASE_URL', default='postgres://postgres@127.0.0.1/{{cookiecutter.project_slug}}'),
+}
+DATABASES['default']['ATOMIC_REQUESTS'] = True
+
 # CACHING
 # ------------------------------------------------------------------------------
 CACHES = {
@@ -43,8 +49,6 @@ CACHES = {
         'LOCATION': ''
     }
 }
-
-local_use_redis = not env.bool('LOCAL_USE_REDIS', default=False)
 
 if local_use_redis:
     CACHES["default"] = {
@@ -56,12 +60,15 @@ if local_use_redis:
 # HUEY
 # ------------------------------------------------------------------------------
 
+huey_always_eager = not env.bool('LOCAL_USE_REDIS', default=not DEBUG)
+
 HUEY = {
     'name': DATABASES['default']['NAME'],  # Use db name for huey.
     'always_eager': True,  # If DEBUG=True, run synchronously.
 }
 
 if !DEBUG or local_use_redis:
+    print("HUEY läuft nicht im always_eager mode!")
     HUEY = {
         'name': DATABASES['default']['NAME'],  # Use db name for huey.
         'always_eager': False,  # If DEBUG=True, run synchronously.

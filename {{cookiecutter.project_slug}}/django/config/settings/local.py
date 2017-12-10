@@ -1,8 +1,11 @@
 """
 Local settings for {{cookiecutter.project_name}} project.
 """
+from redis import ConnectionPool
 
 from .base import *  # noqa
+
+local_use_redis = not env.bool('LOCAL_USE_REDIS', default=False)
 
 # DEBUG
 # ------------------------------------------------------------------------------
@@ -23,6 +26,51 @@ CACHES = {
         'LOCATION': ''
     }
 }
+
+if local_use_redis:
+    CACHES["default"] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient", }
+    }
+
+
+# CACHING
+# ------------------------------------------------------------------------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': ''
+    }
+}
+
+local_use_redis = not env.bool('LOCAL_USE_REDIS', default=False)
+
+if local_use_redis:
+    CACHES["default"] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient", }
+    }
+
+# HUEY
+# ------------------------------------------------------------------------------
+
+HUEY = {
+    'name': DATABASES['default']['NAME'],  # Use db name for huey.
+    'always_eager': True,  # If DEBUG=True, run synchronously.
+}
+
+if !DEBUG or local_use_redis:
+    HUEY = {
+        'name': DATABASES['default']['NAME'],  # Use db name for huey.
+        'always_eager': False,  # If DEBUG=True, run synchronously.
+        'connection': {
+            'connection_pool': ConnectionPool(host='localhost', port=6379, max_connections=20),
+        },
+        'consumer': { 'workers': 4, },
+    }
+
 
 # django-debug-toolbar
 # ------------------------------------------------------------------------------
